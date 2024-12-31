@@ -1,0 +1,165 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+// Clase base para un personaje (jugador o enemigo)
+class Personaje {
+protected:
+    string nombre;
+    int salud;
+    int ataque;
+    int defensa;
+
+public:
+    Personaje(string _nombre, int _salud, int _ataque, int _defensa)
+        : nombre(_nombre), salud(_salud), ataque(_ataque), defensa(_defensa) {}
+
+    // Método para verificar si el personaje está vivo
+    bool estaVivo() {
+        return salud > 0;
+    }
+
+    // Método para recibir daño
+    void recibirDanio(int dano) {
+        int danioFinal = dano - defensa;
+        if (danioFinal > 0) {
+            salud -= danioFinal;
+            cout << nombre << " recibe " << danioFinal << " de daño." << endl;
+        } else {
+            cout << nombre << " bloquea todo el daño!" << endl;
+        }
+    }
+
+    // Método para atacar a otro personaje
+    virtual void atacar(Personaje& objetivo) = 0;
+
+    // Mostrar la información del personaje
+    void mostrarEstado() {
+        cout << nombre << " - Salud: " << salud << ", Ataque: " << ataque << ", Defensa: " << defensa << endl;
+    }
+};
+
+// Clase derivada para el jugador
+class Jugador : public Personaje {
+public:
+    Jugador(string _nombre) : Personaje(_nombre, 100, 20, 5) {}
+
+    void atacar(Personaje& objetivo) override {
+        cout << nombre << " ataca a " << objetivo.nombre << "!" << endl;
+        objetivo.recibirDanio(ataque);
+    }
+};
+
+// Clase derivada para el enemigo
+class Enemigo : public Personaje {
+public:
+    Enemigo(string _nombre) : Personaje(_nombre, 50, 15, 2) {}
+
+    void atacar(Personaje& objetivo) override {
+        cout << nombre << " ataca a " << objetivo.nombre << "!" << endl;
+        objetivo.recibirDanio(ataque);
+    }
+};
+class Juego {
+private:
+    Jugador* jugador;
+    Enemigo* enemigo;
+
+public:
+    Juego() {
+        jugador = new Jugador("Frisk");
+        enemigo = new Enemigo("Muffet");
+    }
+
+    ~Juego() {
+        delete jugador;
+        delete enemigo;
+    }
+
+    // Lógica del combate
+    void combate() {
+        cout << "¡El combate ha comenzado!" << endl;
+
+        while (jugador->estaVivo() && enemigo->estaVivo()) {
+            jugador->mostrarEstado();
+            enemigo->mostrarEstado();
+
+            cout << "\nElige tu acción:\n";
+            cout << "1. Atacar\n";
+            cout << "2. Defender\n";
+            cout << "3. Huir\n";
+
+            int opcion;
+            cin >> opcion;
+
+            switch (opcion) {
+            case 1: {
+                jugador->atacar(*enemigo);
+                break;
+            }
+            case 2: {
+                cout << "Defendiendo..." << endl;
+                break;
+            }
+            case 3: {
+                cout << "Has huido del combate..." << endl;
+                return;
+            }
+            default:
+                cout << "Opción no válida. Elige nuevamente." << endl;
+                continue;
+            }
+
+            // El enemigo siempre ataca después
+            if (enemigo->estaVivo()) {
+                enemigo->atacar(*jugador);
+            }
+        }
+
+        if (jugador->estaVivo()) {
+            cout << "¡Has derrotado al enemigo!" << endl;
+        } else {
+            cout << "Has sido derrotado..." << endl;
+        }
+    }
+
+    // Lógica del juego (elección de decisiones)
+    void inicio() {
+        cout << "¡Bienvenido a un mundo subterráneo! \nEstás en una aventura." << endl;
+
+        while (jugador->estaVivo()) {
+            cout << "\n¿Qué deseas hacer?\n";
+            cout << "1. Explorar\n";
+            cout << "2. Combatir\n";
+            cout << "3. Salir del juego\n";
+
+            int eleccion;
+            cin >> eleccion;
+
+            switch (eleccion) {
+            case 1:
+                cout << "Explorando... \nParece que no encuentras nada interesante." << endl;
+                break;
+            case 2:
+                combate();
+                break;
+            case 3:
+                cout << "Gracias por jugar. ¡Adiós!" << endl;
+                return;
+            default:
+                cout << "Opción no válida. Elige nuevamente." << endl;
+                continue;
+            }
+        }
+    }
+};
+
+int main() {
+    srand(time(0)); // Para aleatoriedad en combate
+    Juego juego;
+    juego.inicio();
+    return 0;
+}
